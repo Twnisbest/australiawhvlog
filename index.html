@@ -507,6 +507,9 @@ async function parsePayslipPdf(file) {
   }
   return extractPayslipFields(fullText);
 }
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 function fmt(n) {
   return Number(n || 0).toLocaleString('zh-TW', { maximumFractionDigits: 2 });
 }
@@ -781,7 +784,7 @@ function renderPayCheck() {
                 <div class="date">${w.start} ~ ${w.end}</div>
                 <div class="detail">
                   系統算：${fmtMoney(calc)}${rec && rec.gross != null ? `　稅前：${fmtMoney(rec.gross)}` : ''}${rec && rec.tax ? `　所得稅：${fmtMoney(rec.tax)}` : ''}${net != null ? `　實領：${fmtMoney(net)}` : ''}${rec && rec.superAmt ? `　退休金：${fmtMoney(rec.superAmt)}` : ''}${d !== null ? (Math.abs(d)<0.005 ? '　✓相符' : (d>0 ? `　多${fmtMoney(d)}` : `　少${fmtMoney(-d)}`)) : ''}
-                  ${rec && rec.file ? `　<a href="${rec.file.dataUrl}" download="${rec.file.name}" onclick="event.stopPropagation()">📎薪資單</a>` : ''}
+                  ${rec && rec.file ? `　<a href="${rec.file.dataUrl}" download="${escapeHtml(rec.file.name)}" onclick="event.stopPropagation()">📎薪資單</a>` : ''}
                 </div>
               </div>
               <div style="display:flex;align-items:center;gap:8px;">
@@ -889,7 +892,7 @@ function renderTaxTab() {
       <div style="display:flex; flex-direction:column; gap:8px;">
         <a href="https://my.gov.au" target="_blank" rel="noopener" class="linkbtn">🔗 myGov</a>
         <a href="https://www.ato.gov.au" target="_blank" rel="noopener" class="linkbtn">🔗 ATO 稅務局（報稅／查稅）</a>
-        <a href="${links.superFundUrl}" target="_blank" rel="noopener" class="linkbtn">🔗 ${links.superFundName}（退休金）</a>
+        <a href="${escapeHtml(links.superFundUrl)}" target="_blank" rel="noopener" class="linkbtn">🔗 ${escapeHtml(links.superFundName)}（退休金）</a>
       </div>
       <button type="button" id="edit-super-link" style="margin-top:10px; width:100%; padding:9px; border-radius:8px; border:1px solid var(--border); background:#fafbfa; color:var(--sub); font-size:13px; cursor:pointer;">編輯退休金連結</button>
     </div>
@@ -1182,9 +1185,9 @@ function attachHandlers() {
         <div style="margin-top:10px; padding:10px; background:#f7f9f8; border-radius:10px;">
           ${file.type && file.type.startsWith('image/') ? `<img src="${file.dataUrl}" style="max-width:100%; border-radius:8px; display:block; margin-bottom:8px;">` : ''}
           <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; gap:8px;">
-            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📎 ${file.name}</span>
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📎 ${escapeHtml(file.name)}</span>
             <div style="display:flex; gap:10px; flex-shrink:0;">
-              <a href="${file.dataUrl}" download="${file.name}" style="color:var(--primary-dark); font-weight:600; text-decoration:none;">下載</a>
+              <a href="${file.dataUrl}" download="${escapeHtml(file.name)}" style="color:var(--primary-dark); font-weight:600; text-decoration:none;">下載</a>
               <button type="button" id="pc-file-remove" style="background:none;border:none;color:var(--danger);cursor:pointer;padding:0;">移除</button>
             </div>
           </div>
@@ -1349,7 +1352,11 @@ function attachHandlers() {
       const url = prompt('退休金基金網址（含 https://）', data.quickLinks.superFundUrl);
       if (url === null) return;
       data.quickLinks.superFundName = name || data.quickLinks.superFundName;
-      data.quickLinks.superFundUrl = url || data.quickLinks.superFundUrl;
+      if (url && /^https?:\/\//i.test(url)) {
+        data.quickLinks.superFundUrl = url;
+      } else if (url) {
+        alert('網址必須以 http:// 或 https:// 開頭，這次先不更新網址');
+      }
       saveData();
       render();
     });
