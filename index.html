@@ -240,9 +240,38 @@
     text-align: center;
   }
   .linkbtn:active { opacity: 0.85; }
+  .install-tip {
+    display: none;
+    background: #fff8e1;
+    border-bottom: 2px solid #f0ad4e;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #6b4e00;
+    line-height: 1.6;
+  }
+  .install-tip p { margin: 4px 0; }
+  .install-tip button {
+    margin-top: 10px;
+    width: 100%;
+    padding: 9px;
+    border: none;
+    border-radius: 8px;
+    background: #f0ad4e;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
+
+<div id="install-tip" class="install-tip">
+  <p>📱 <strong>使用小提醒</strong></p>
+  <p>1. 建議把這個網頁「加到主畫面」再使用，資料比較不容易被手機系統自動清除（iPhone Safari 特別容易發生）。</p>
+  <p>2. 建議偶爾到「核薪」分頁按「匯出備份」存一份起來，手機萬一資料不見了，才能用「匯入備份」救回來。</p>
+  <button type="button" id="install-tip-close">知道了，不再提醒</button>
+</div>
 
 <header><h1>打工收入紀錄</h1></header>
 
@@ -588,8 +617,8 @@ function renderFarmB() {
       <input type="date" id="b-date" value="${todayStr()}">
       <label>今天的模式</label>
       <div class="seg">
-        <button type="button" data-mode="hourly" class="${farmBMode==='hourly'?'active':''}">時薪</button>
         <button type="button" data-mode="piece" class="${farmBMode==='piece'?'active':''}">計件</button>
+        <button type="button" data-mode="hourly" class="${farmBMode==='hourly'?'active':''}">時薪</button>
       </div>
       <div id="b-hourly-fields" class="${farmBMode==='hourly'?'':'hidden'}">
         <label>上班時間</label>
@@ -1332,6 +1361,15 @@ document.querySelectorAll('nav.tabbar button').forEach(btn => {
     currentTab = btn.dataset.tab;
     render();
   });
+});
+
+const INSTALL_TIP_KEY = 'worklog_seenInstallTip_v1';
+if (!localStorage.getItem(INSTALL_TIP_KEY)) {
+  document.getElementById('install-tip').style.display = 'block';
+}
+document.getElementById('install-tip-close').addEventListener('click', () => {
+  localStorage.setItem(INSTALL_TIP_KEY, '1');
+  document.getElementById('install-tip').style.display = 'none';
 });
 
 render();
